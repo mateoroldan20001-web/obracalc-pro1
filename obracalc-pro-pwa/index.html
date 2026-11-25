@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ObraCalc Pro - Calculadora y Cotizador</title>
+  <meta name="description" content="Calculadora de materiales, catálogo de ferretería y cotizador profesional offline." />
+  <meta name="theme-color" content="#F59E0B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ObraCalc Pro" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <style>
+    :root {
+      --bg: #121212;
+      --surface: #1E1E1E;
+      --surface-2: #27272A;
+      --border: #333338;
+      --primary: #F59E0B;
+      --primary-dark: #D97706;
+      --success: #10B981;
+      --danger: #EF4444;
+      --info: #3B82F6;
+      --text: #F9FAFB;
+      --muted: #9CA3AF;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 78px;
+    }
+    .app-wrap { max-width: 560px; margin: 0 auto; min-height: 100vh; }
+
+    /* Header */
+    .header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(18,18,18,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--primary); color: #111; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; font-size: 16px; flex-shrink: 0;
+    }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand h1 { margin: 0; font-size: 18px; color: var(--primary); line-height: 1.1; }
+    .brand small { color: var(--muted); font-size: 11px; display: block; }
+    .badge-profile {
+      font-size: 11px; font-weight: 700; padding: 4px 9px;
+      border-radius: 999px; background: var(--surface-2); color: var(--primary);
+      border: 1px solid var(--border); cursor: pointer;
+    }
+
+    /* Install Banner */
+    #installBanner {
+      display: none; background: #29200D; border-bottom: 1px solid var(--primary);
+      padding: 10px 16px; font-size: 13px;
+      align-items: center; justify-content: space-between; gap: 10px;
+    }
+    #installBanner button {
+      background: var(--primary); color: #111; border: none; border-radius: 8px;
+      padding: 7px 12px; font-weight: 800; font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+
+    /* Main Content */
+    .view { display: none; padding: 14px; }
+    .view.active { display: block; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px; margin-bottom: 14px;
+    }
+    .card-highlight { border-color: var(--primary); }
+    .card-title {
+      font-size: 15px; font-weight: 800; margin: 0 0 12px 0;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+
+    /* Inputs & Buttons */
+    .row { display: flex; gap: 10px; }
+    .col { flex: 1; min-width: 0; }
+    .field { margin-bottom: 11px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: #D1D5DB; margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%; background: var(--bg); color: var(--text);
+      border: 1px solid #3F3F46; border-radius: 10px;
+      padding: 11px 12px; font-size: 15px; outline: none; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: none; border-radius: 10px; padding: 12px 14px;
+      font-size: 14px; font-weight: 800; cursor: pointer; width: 100%;
+    }
+    .btn-sm { padding: 8px 11px; font-size: 12px; width: auto; border-radius: 8px; }
+    .btn-primary { background: var(--primary); color: #111827; }
+    .btn-success { background: var(--success); color: #052E16; }
+    .btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: rgba(239,68,68,0.16); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.35); }
+
+    /* Pills / Subtabs */
+    .pills { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: none; }
+    .pills::-webkit-scrollbar { display: none; }
+    .pill {
+      padding: 8px 13px; border-radius: 999px; background: var(--surface);
+      border: 1px solid var(--border); color: #D1D5DB; font-size: 13px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .pill.active { background: var(--primary); color: #111827; border-color: var(--primary); }
+
+    /* Result rows */
+    .res-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .res-row:last-of-type { border-bottom: none; }
+    .res-val { color: var(--primary); font-weight: 800; font-size: 15px; }
+
+    /* Catalog & Cart items */
+    .item-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-name { font-weight: 700; font-size: 14px; }
+    .item-sub { font-size: 12px; color: var(--muted); }
+    .qty-box { display: flex; align-items: center; gap: 6px; }
+    .qty-btn {
+      width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text); font-weight: 800; font-size: 16px; cursor: pointer;
+    }
+    .price-inline {
+      width: 96px; padding: 6px 8px; font-size: 13px; text-align: right;
+    }
+
+    /* Totals Box */
+    .totals-box {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px; margin: 12px 0;
+    }
+    .tot-line { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #D1D5DB; }
+    .tot-main {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px;
+      font-size: 18px; font-weight: 900; color: var(--success);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer; border: none;
+    }
+    .st-Pendiente { background: rgba(245,158,11,0.18); color: #FCD34D; }
+    .st-Aprobada { background: rgba(59,130,246,0.2); color: #93C5FD; }
+    .st-Vendida { background: rgba(16,185,129,0.2); color: #6EE7B7; }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 30;
+      background: #18181B; border-top: 1px solid var(--border);
+      display: flex; justify-content: center;
+    }
+    .bottom-nav-inner {
+      width: 100%; max-width: 560px; display: flex;
+    }
+    .nav-btn {
+      flex: 1; background: none; border: none; color: var(--muted);
+      padding: 9px 4px 10px; font-size: 11px; font-weight: 700;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; position: relative;
+    }
+    .nav-btn.active { color: var(--primary); }
+    .nav-icon { font-size: 18px; line-height: 1; }
+    .cart-dot {
+      position: absolute; top: 4px; right: 16%;
+      background: var(--danger); color: #fff; font-size: 10px; font-weight: 800;
+      min-width: 18px; height: 18px; border-radius: 999px;
+      display: none; align-items: center; justify-content: center; padding: 0 4px;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 50;
+      display: none; align-items: center; justify-content: center; padding: 14px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; width: 100%; max-width: 500px; max-height: 88vh;
+      overflow-y: auto; padding: 16px;
+    }
+
+    /* Onboarding */
+    .profile-card {
+      background: var(--bg); border: 2px solid var(--border); border-radius: 12px;
+      padding: 13px; margin-bottom: 10px; cursor: pointer; transition: 0.15s;
+    }
+    .profile-card.selected { border-color: var(--primary); background: rgba(245,158,11,0.08); }
+    .profile-card h4 { margin: 0 0 4px; font-size: 15px; color: var(--text); }
+    .profile-card p { margin: 0; font-size: 12px; color: var(--muted); }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%);
+      background: #111827; color: #fff; border: 1px solid var(--primary);
+      padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      z-index: 60; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    /* Printable PDF Area */
+    #printSheet { display: none; }
+    @media print {
+      body { background: #fff; color: #111; padding: 0; }
+      .app-wrap, .bottom-nav, .modal-backdrop, #toast { display: none !important; }
+      #printSheet {
+        display: block !important; padding: 20px; font-family: Arial, sans-serif; color: #111827;
+      }
+    }
+    .pdf-preview {
+      background: #fff; color: #111827; border-radius: 10px; padding: 18px; font-size: 13px;
+    }
+    .pdf-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .pdf-table th, .pdf-table td { border-bottom: 1px solid #E5E7EB; padding: 7px 4px; text-align: left; }
+    .pdf-table th { background: #F9FAFB; font-size: 12px; }
+    .text-right { text-align: right !important; }
+  </style>
+</head>
+<body>
+
+<div class="app-wrap">
+  <!-- Install PWA Banner -->
+  <div id="installBanner">
+    <span>Instala <strong>ObraCalc Pro</strong> en tu celular para usarla sin internet.</span>
+    <button id="btnInstallPwa">Instalar App</button>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo" id="headerLogo">OC</div>
+      <div>
+        <h1 id="headerTitle">ObraCalc Pro</h1>
+        <small id="headerSub">Calculadora y Cotizador Offline</small>
+      </div>
+    </div>
+    <button class="badge-profile" id="headerProfileBadge" onclick="openOnboarding()">Ferretería</button>
+  </header>
+
+  <!-- VIEW 1: CALCULADORAS -->
+  <section id="view-calc" class="view active">
+    <div class="pills" id="calcTabs">
+      <button class="pill active" onclick="setCalcTab('pintura', this)">Pintura</button>
+      <button class="pill" onclick="setCalcTab('pisos', this)">Pisos</button>
+      <button class="pill" onclick="setCalcTab('drywall', this)">Drywall</button>
+      <button class="pill" onclick="setCalcTab('concreto', this)">Concreto</button>
+      <button class="pill" onclick="setCalcTab('muro', this)">Muros / Ladrillo</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span id="calcFormTitle">1. Medidas de Pintura</span>
+        <button class="btn btn-secondary btn-sm" onclick="cargarEjemplo()">Ejemplo</button>
+      </div>
+      <div id="calcFormBody"></div>
+    </div>
+
+    <div class="card card-highlight">
+      <div class="card-title"><span>2. Materiales estimados</span></div>
+      <div id="calcResults"></div>
+      <button class="btn btn-primary" style="margin-top:12px;" onclick="agregarCalculoAlCarrito()">
+        + Agregar materiales a la cotización
+      </button>
+    </div>
+  </section>
+
+  <!-- VIEW 2: CATÁLOGO -->
+  <section id="view-catalogo" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>Mi Catálogo de Precios</span>
+        <button class="btn btn-primary btn-sm" onclick="openLibraryModal()">+ Biblioteca Ferretería</button>
+      </div>
+      <div class="row" style="margin-bottom:10px;">
+        <input id="catSearch" placeholder="Buscar cemento, varilla, clavos..." oninput="renderCatalog()" />
+      </div>
+      <div class="pills" id="catFilters">
+        <button class="pill active" onclick="setCatFilter('Todos', this)">Todos</button>
+        <button class="pill" onclick="setCatFilter('Obra negra', this)">Obra negra</button>
+        <button class="pill" onclick="setCatFilter('Acabados', this)">Acabados</button>
+        <button class="pill" onclick="setCatFilter('Ferretería', this)">Ferretería</button>
+        <button class="pill" onclick="setCatFilter('Plomería/Eléctricos', this)">Plomería/Eléctricos</button>
+      </div>
+      <div id="catalogList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>Crear producto personalizado</span></div>
+      <div class="field"><label>Nombre del producto</label><input id="newProdName" placeholder="Ej: Malla electrosoldada" /></div>
+      <div class="row">
+        <div class="col field">
+          <label>Categoría</label>
+          <select id="newProdCat">
+            <option>Obra negra</option>
+            <option>Acabados</option>
+            <option>Ferretería</option>
+            <option>Plomería/Eléctricos</option>
+          </select>
+        </div>
+        <div class="col field">
+          <label>Unidad</label>
+          <select id="newProdUnit">
+            <option>Unidad</option><option>Bulto</option><option>Galón</option>
+            <option>Caja</option><option>Libra</option><option>Kilo</option>
+            <option>Metro</option><option>m³</option><option>Rollo</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Precio unitario ($)</label><input id="newProdPrice" type="number" placeholder="25000" /></div>
+      <button class="btn btn-secondary" onclick="crearProducto()">Guardar en mi catálogo</button>
+    </div>
+  </section>
+
+  <!-- VIEW 3: COTIZAR / CARRITO -->
+  <section id="view-cotizar" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>Ítems en esta cotización</span>
+        <button class="btn btn-secondary btn-sm" onclick="openCustomItemModal()">+ Ítem libre</button>
+      </div>
+      <div id="cartList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>Datos del cliente y entrega</span></div>
+      <div class="row">
+        <div class="col field"><label>Nombre del cliente</label><input id="qCliente" placeholder="Ej: Carlos Pérez" /></div>
+        <div class="col field"><label>Teléfono (opcional)</label><input id="qTel" placeholder="300 123 4567" /></div>
+      </div>
+
+      <label>Transporte / Flete</label>
+      <div class="pills" style="margin-bottom:8px;">
+        <button class="pill active" id="ship-recoge" onclick="setShipping('recoge')">Recoge en tienda</button>
+        <button class="pill" id="ship-costo" onclick="setShipping('costo')">Envío con costo</button>
+        <button class="pill" id="ship-gratis" onclick="setShipping('gratis')">Envío gratis</button>
+      </div>
+      <div id="shippingDetails" style="display:none;">
+        <div id="shippingCostWrap" class="field">
+          <label>Valor del flete ($)</label>
+          <div class="row" style="margin-bottom:6px;">
+            <input id="qFlete" type="number" value="0" oninput="renderCartTotals()" />
+          </div>
+          <div class="row">
+            <button class="btn btn-secondary btn-sm" onclick="setFleteRapido(15000)">Urbano $15k</button>
+            <button class="btn btn-secondary btn-sm" onclick="setFleteRapido(30000)">Zona 2 $30k</button>
+            <button class="btn btn-secondary btn-sm" onclick="setFleteRapido(50000)">Vereda $50k</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Dirección de entrega</label>
+          <input id="qDireccion" placeholder="Ej: Calle 10 # 5-20, Barrio Centro" />
+        </div>
+      </div>
+
+      <div id="manoObraWrap" class="field" style="display:none;">
+        <label>Mano de obra ($)</label>
+        <input id="qManoObra" type="number" value="0" oninput="renderCartTotals()" />
+      </div>
+
+      <div class="row">
+        <div class="col field">
+          <label>Descuento (%)</label>
+          <input id="qDescPct" type="number" value="0" min="0" max="100" oninput="renderCartTotals()" />
+        </div>
+        <div class="col field">
+          <label>IVA (%)</label>
+          <input id="qIvaPct" type="number" value="0" min="0" max="30" oninput="renderCartTotals()" />
+        </div>
+      </div>
+
+      <!-- Abono / Saldo -->
+      <div class="field">
+        <label>Abono recibido ($)</label>
+        <input id="qAbono" type="number" value="0" oninput="renderCartTotals()" />
+        <div class="row" style="margin-top:6px;">
+          <button class="btn btn-secondary btn-sm" onclick="setAbonoRapido(0)">Sin abono</button>
+          <button class="btn btn-secondary btn-sm" onclick="setAbonoRapido(0.5)">50% Anticipo</button>
+          <button class="btn btn-secondary btn-sm" onclick="setAbonoRapido(1)">Pago total</button>
+        </div>
+      </div>
+
+      <div class="totals-box" id="cartTotalsBox"></div>
+
+      <div class="row" style="margin-bottom:8px;">
+        <button class="btn btn-primary" onclick="abrirVistaPDF()">Ver / Guardar PDF</button>
+        <button class="btn btn-success" onclick="enviarWhatsApp()">WhatsApp</button>
+      </div>
+      <div class="row">
+        <button class="btn btn-secondary" onclick="guardarEnHistorial()">Guardar en historial</button>
+        <button class="btn btn-secondary" onclick="copiarTexto()">Copiar texto</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 4: HISTORIAL -->
+  <section id="view-historial" class="view">
+    <div class="card">
+      <div class="card-title"><span>Historial de Cotizaciones</span></div>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- VIEW 5: MI NEGOCIO -->
+  <section id="view-negocio" class="view">
+    <div class="card">
+      <div class="card-title">
+        <span>Perfil del Negocio</span>
+        <button class="btn btn-secondary btn-sm" onclick="openOnboarding()">Cambiar perfil</button>
+      </div>
+      <div class="field">
+        <label>Logo del negocio (aparece en el PDF)</label>
+        <input type="file" id="bizLogoInput" accept="image/*" onchange="subirLogo(event)" />
+        <div id="bizLogoPreview" style="margin-top:8px;"></div>
+      </div>
+      <div class="field"><label>Nombre comercial</label><input id="bizNombre" placeholder="Ej: Ferretería El Constructor" /></div>
+      <div class="row">
+        <div class="col field"><label>NIT / Cédula</label><input id="bizNit" placeholder="Ej: 900.123.456-7" /></div>
+        <div class="col field"><label>Teléfono / WhatsApp</label><input id="bizTel" placeholder="Ej: 310 555 1234" /></div>
+      </div>
+      <div class="field"><label>Dirección del local</label><input id="bizDir" placeholder="Ej: Cra 4 # 8-15" /></div>
+      <div class="field"><label>Medios de pago (Nequi, Daviplata, Cuenta)</label><textarea id="bizPagos" rows="2" placeholder="Ej: Nequi / Daviplata: 310 555 1234 · Bancolombia Ahorros 123-456789-00"></textarea></div>
+      <div class="field"><label>Nota / Validez al pie del PDF</label><input id="bizNota" placeholder="Cotización válida por 8 días · Precios sujetos a cambio." /></div>
+      <button class="btn btn-primary" onclick="guardarNegocio()">Guardar datos del negocio</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>Copia de Seguridad (.json)</span></div>
+      <p style="font-size:12px; color:var(--muted); margin-top:0;">
+        Respalda tu catálogo, historial y datos del negocio para no perder nada si cambias de celular.
+      </p>
+      <div class="row">
+        <button class="btn btn-secondary" onclick="exportarBackup()">Exportar respaldo</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Importar respaldo</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importarBackup(event)" />
+    </div>
+  </section>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="nav-btn active" onclick="switchView('calc', this)"><span class="nav-icon">🧮</span>Calcular</button>
+    <button class="nav-btn" onclick="switchView('catalogo', this)"><span class="nav-icon">📦</span>Catálogo</button>
+    <button class="nav-btn" onclick="switchView('cotizar', this)">
+      <span class="nav-icon">🧾</span>Cotizar
+      <span class="cart-dot" id="cartBadge">0</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('historial', this)"><span class="nav-icon">📋</span>Historial</button>
+    <button class="nav-btn" onclick="switchView('negocio', this)"><span class="nav-icon">🏪</span>Negocio</button>
+  </div>
+</nav>
+
+<!-- MODAL: ONBOARDING -->
+<div class="modal-backdrop" id="modalOnboarding">
+  <div class="modal-box">
+    <h2 style="margin:0 0 6px; color:var(--primary);">Bienvenido a ObraCalc Pro</h2>
+    <p style="margin:0 0 14px; font-size:13px; color:var(--muted);">Elige cómo vas a usar la app para adaptar las cotizaciones:</p>
+
+    <div class="profile-card selected" id="prof-ferreteria" onclick="selectProfileOption('ferreteria')">
+      <h4>🏪 Ferretería / Depósito de Materiales</h4>
+      <p>Enfoque en ventas de mostrador, catálogo editable, transporte/flete, IVA y abonos.</p>
+    </div>
+    <div class="profile-card" id="prof-maestro" onclick="selectProfileOption('maestro')">
+      <h4>👷 Maestro de Obra / Contratista</h4>
+      <p>Incluye campo de mano de obra, anticipos y cálculos rápidos de materiales.</p>
+    </div>
+    <div class="profile-card" id="prof-personal" onclick="selectProfileOption('personal')">
+      <h4>🏠 Uso Personal / Remodelación</h4>
+      <p>Calcula cuántos materiales necesitas para tu casa sin complicaciones.</p>
+    </div>
+
+    <div class="field" style="margin-top:12px;">
+      <label>Nombre de tu negocio o tu nombre (opcional)</label>
+      <input id="onbName" placeholder="Ej: Ferretería La Estrella" />
+    </div>
+    <button class="btn btn-primary" onclick="confirmOnboarding()">Comenzar</button>
+  </div>
+</div>
+
+<!-- MODAL: BIBLIOTECA FERRETERÍA (55 PRODUCTOS) -->
+<div class="modal-backdrop" id="modalLibrary">
+  <div class="modal-box">
+    <div class="card-title">
+      <span>Biblioteca de Ferretería (55 ítems)</span>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modalLibrary')">Cerrar</button>
+    </div>
+    <input id="libSearch" placeholder="Filtrar biblioteca..." oninput="renderLibrary()" style="margin-bottom:10px;" />
+    <div class="pills" id="libCats"></div>
+    <div id="libList"></div>
+  </div>
+</div>
+
+<!-- MODAL: ÍTEM LIBRE -->
+<div class="modal-backdrop" id="modalCustomItem">
+  <div class="modal-box">
+    <div class="card-title">
+      <span>Agregar ítem libre</span>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modalCustomItem')">Cerrar</button>
+    </div>
+    <div class="field"><label>Descripción</label><input id="ciName" placeholder="Ej: Chazo plástico 1/4" /></div>
+    <div class="row">
+      <div class="col field"><label>Cantidad</label><input id="ciQty" type="number" value="1" /></div>
+      <div class="col field"><label>Unidad</label><input id="ciUnit" value="Unidad" /></div>
+    </div>
+    <div class="field"><label>Precio unitario ($)</label><input id="ciPrice" type="number" placeholder="500" /></div>
+    <button class="btn btn-primary" onclick="agregarItemLibre()">Agregar a la cotización</button>
+  </div>
+</div>
+
+<!-- MODAL: ABONAR / SALDO EN HISTORIAL -->
+<div class="modal-backdrop" id="modalAbono">
+  <div class="modal-box">
+    <div class="card-title">
+      <span>Registrar Abono / Saldo</span>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modalAbono')">Cerrar</button>
+    </div>
+    <div id="abonoInfo" style="margin-bottom:12px; font-size:13px;"></div>
+    <div class="field"><label>Nuevo abono a sumar ($)</label><input id="abonoAdd" type="number" placeholder="50000" /></div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="aplicarAbonoHistorial(false)">Sumar abono</button>
+      <button class="btn btn-success" onclick="aplicarAbonoHistorial(true)">Saldar todo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VISTA PREVIA PDF -->
+<div class="modal-backdrop" id="modalPDF">
+  <div class="modal-box">
+    <div class="card-title">
+      <span>Vista previa de Cotización</span>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modalPDF')">Cerrar</button>
+    </div>
+    <div id="pdfPreviewContent" class="pdf-preview"></div>
+    <div class="row" style="margin-top:12px;">
+      <button class="btn btn-primary" onclick="window.print()">Imprimir / Guardar PDF</button>
+      <button class="btn btn-success" onclick="enviarWhatsApp()">Enviar WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINTABLE SHEET -->
+<div id="printSheet"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// --- SERVICE WORKER & PWA INSTALL ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
+document.getElementById('btnInstallPwa').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBanner').style.display = 'none';
+});
+
+// --- HELPERS ---
+const $ = (id) => document.getElementById(id);
+const num = (v) => parseFloat(String(v).replace(',', '.')) || 0;
+const money = (v) => '$' + Math.round(v || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(window._tTimer);
+  window._tTimer = setTimeout(() => t.style.display = 'none', 2300);
+}
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// --- DEFAULT DATA ---
+const DEFAULT_CATALOG = [
+  { id: 'cemento', name: 'Cemento gris 50kg', cat: 'Obra negra', unit: 'Bulto', price: 32000 },
+  { id: 'arena', name: 'Arena lavada', cat: 'Obra negra', unit: 'm³', price: 110000 },
+  { id: 'gravilla', name: 'Gravilla / Triturado', cat: 'Obra negra', unit: 'm³', price: 120000 },
+  { id: 'ladrillo', name: 'Ladrillo estructural / bloque', cat: 'Obra negra', unit: 'Unidad', price: 1400 },
+  { id: 'varilla12', name: 'Varilla corrugada 1/2" (6m)', cat: 'Obra negra', unit: 'Unidad', price: 34000 },
+  { id: 'varilla38', name: 'Varilla corrugada 3/8" (6m)', cat: 'Obra negra', unit: 'Unidad', price: 21000 },
+  { id: 'alambre', name: 'Alambre recocido negro', cat: 'Ferretería', unit: 'Kilo', price: 7500 },
+  { id: 'clavos', name: 'Clavos de acero 2.5"', cat: 'Ferretería', unit: 'Libra', price: 4500 },
+  { id: 'pintura', name: 'Pintura vinilo tipo 1', cat: 'Acabados', unit: 'Galón', price: 68000 },
+  { id: 'ceramica', name: 'Cerámica piso estándar', cat: 'Acabados', unit: 'Caja', price: 48000 },
+  { id: 'pegante', name: 'Pegante cerámico 25kg', cat: 'Acabados', unit: 'Bulto', price: 28000 },
+  { id: 'lamina_dw', name: 'Lámina Drywall 1.22x2.44m', cat: 'Acabados', unit: 'Unidad', price: 36000 },
+  { id: 'paral_dw', name: 'Paral metálico Drywall', cat: 'Acabados', unit: 'Unidad', price: 13500 },
+  { id: 'canal_dw', name: 'Canal metálico Drywall', cat: 'Acabados', unit: 'Unidad', price: 11500 },
+  { id: 'tornillo_dw', name: 'Tornillo Drywall (ciento)', cat: 'Ferretería', unit: 'Ciento', price: 6000 },
+  { id: 'estuco', name: 'Estuco plástico cuñete', cat: 'Acabados', unit: 'Unidad', price: 54000 },
+  { id: 'tubo_pvc', name: 'Tubo PVC sanitario 2" (6m)', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 38000 },
+  { id: 'cable12', name: 'Cable eléctrico #12', cat: 'Plomería/Eléctricos', unit: 'Metro', price: 3200 },
+  { id: 'brocha', name: 'Brocha 3 pulgadas', cat: 'Ferretería', unit: 'Unidad', price: 9500 },
+  { id: 'rodillo', name: 'Rodillo felpa 9"', cat: 'Ferretería', unit: 'Unidad', price: 16000 }
+];
+
+const LIBRARY_ITEMS = [
+  // Obra Negra (10)
+  { name: 'Cemento blanco 20kg', cat: 'Obra negra', unit: 'Bulto', price: 42000 },
+  { name: 'Cal hidratada 10kg', cat: 'Obra negra', unit: 'Bulto', price: 12000 },
+  { name: 'Arena de peña', cat: 'Obra negra', unit: 'm³', price: 95000 },
+  { name: 'Recebo compactado', cat: 'Obra negra', unit: 'm³', price: 85000 },
+  { name: 'Bloque cemento #4', cat: 'Obra negra', unit: 'Unidad', price: 2400 },
+  { name: 'Bloque cemento #5', cat: 'Obra negra', unit: 'Unidad', price: 2900 },
+  { name: 'Ladrillo tolete común', cat: 'Obra negra', unit: 'Unidad', price: 950 },
+  { name: 'Impermeabilizante integral (Galón)', cat: 'Obra negra', unit: 'Galón', price: 46000 },
+  { name: 'Malla electrosoldada 6x2.35m', cat: 'Obra negra', unit: 'Unidad', price: 115000 },
+  { name: 'Teja de zinc 3.05m', cat: 'Obra negra', unit: 'Unidad', price: 44000 },
+  // Acabados y Pintura (10)
+  { name: 'Cuñete pintura vinilo (5 gal)', cat: 'Acabados', unit: 'Cuñete', price: 290000 },
+  { name: 'Esmalte sintético (Galón)', cat: 'Acabados', unit: 'Galón', price: 78000 },
+  { name: 'Anticorrosivo (Galón)', cat: 'Acabados', unit: 'Galón', price: 62000 },
+  { name: 'Thinner corriente (Galón)', cat: 'Acabados', unit: 'Galón', price: 28000 },
+  { name: 'Boquilla / Fragüe 2kg', cat: 'Acabados', unit: 'Bolsa', price: 11000 },
+  { name: 'Masilla para Drywall (Galón)', cat: 'Acabados', unit: 'Galón', price: 24000 },
+  { name: 'Cinta malla fibra de vidrio', cat: 'Acabados', unit: 'Rollo', price: 12500 },
+  { name: 'Esquinero metálico Drywall', cat: 'Acabados', unit: 'Unidad', price: 8500 },
+  { name: 'Lija de agua #150', cat: 'Acabados', unit: 'Unidad', price: 2200 },
+  { name: 'Cinta de enmascarar 1"', cat: 'Acabados', unit: 'Rollo', price: 6500 },
+  // Acero y Fijaciones (10)
+  { name: 'Varilla lisa 1/4" (6m)', cat: 'Ferretería', unit: 'Unidad', price: 11500 },
+  { name: 'Varilla corrugada 5/8" (6m)', cat: 'Ferretería', unit: 'Unidad', price: 54000 },
+  { name: 'Estribos armados 15x15cm', cat: 'Ferretería', unit: 'Unidad', price: 1800 },
+  { name: 'Clavos con cabeza 3"', cat: 'Ferretería', unit: 'Libra', price: 4200 },
+  { name: 'Puntilla sin cabeza 1.5"', cat: 'Ferretería', unit: 'Libra', price: 4800 },
+  { name: 'Tornillo autoperforante 1"', cat: 'Ferretería', unit: 'Ciento', price: 9000 },
+  { name: 'Chazo expansivo 3/8"', cat: 'Ferretería', unit: 'Unidad', price: 2500 },
+  { name: 'Silicona transparente tubo', cat: 'Ferretería', unit: 'Unidad', price: 14500 },
+  { name: 'Soldadura 6013 1/8"', cat: 'Ferretería', unit: 'Kilo', price: 18500 },
+  { name: 'Bisagra metálica 3"', cat: 'Ferretería', unit: 'Unidad', price: 4500 },
+  // Plomería y PVC (9)
+  { name: 'Tubo PVC presión 1/2" (6m)', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 19500 },
+  { name: 'Tubo PVC sanitario 4" (6m)', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 68000 },
+  { name: 'Codo PVC presión 1/2" 90°', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 1200 },
+  { name: 'Tee PVC presión 1/2"', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 1500 },
+  { name: 'Unión PVC presión 1/2"', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 1000 },
+  { name: 'Soldadura líquida PVC 1/4', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 22000 },
+  { name: 'Limpiador PVC 1/4', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 16000 },
+  { name: 'Cinta teflón 1/2"', cat: 'Plomería/Eléctricos', unit: 'Rollo', price: 2000 },
+  { name: 'Llave de paso bola 1/2"', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 18000 },
+  // Eléctricos (8)
+  { name: 'Cable eléctrico #14', cat: 'Plomería/Eléctricos', unit: 'Metro', price: 2300 },
+  { name: 'Cable encauchetado 2x12', cat: 'Plomería/Eléctricos', unit: 'Metro', price: 8500 },
+  { name: 'Tubo conduit PVC 1/2" (3m)', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 6500 },
+  { name: 'Caja rectangular 2x4 PVC', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 2200 },
+  { name: 'Tomacorriente doble con polo', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 9500 },
+  { name: 'Interruptor sencillo', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 7500 },
+  { name: 'Cinta aislante negra', cat: 'Plomería/Eléctricos', unit: 'Rollo', price: 4500 },
+  { name: 'Bombillo LED 12W luz blanca', cat: 'Plomería/Eléctricos', unit: 'Unidad', price: 8000 },
+  // Herramientas y Consumibles (8)
+  { name: 'Disco de corte metal 4.5"', cat: 'Ferretería', unit: 'Unidad', price: 4500 },
+  { name: 'Disco diamantado 4.5"', cat: 'Ferretería', unit: 'Unidad', price: 24000 },
+  { name: 'Guantes de carnaza / nitrilo', cat: 'Ferretería', unit: 'Par', price: 8500 },
+  { name: 'Flexómetro / Metro 5m', cat: 'Ferretería', unit: 'Unidad', price: 18000 },
+  { name: 'Espátula metálica 4"', cat: 'Ferretería', unit: 'Unidad', price: 9000 },
+  { name: 'Palustre #8', cat: 'Ferretería', unit: 'Unidad', price: 16500 },
+  { name: 'Balde plástico construcción', cat: 'Ferretería', unit: 'Unidad', price: 11000 },
+  { name: 'Segueta hoja bimetálica', cat: 'Ferretería', unit: 'Unidad', price: 6000 }
+];
+
+// --- STATE ---
+let state = {
+  profile: 'ferreteria',
+  onboarded: false,
+  biz: {
+    nombre: 'ObraCalc Pro',
+    nit: '',
+    tel: '',
+    dir: '',
+    pagos: '',
+    nota: 'Cotización válida por 8 días · Precios sujetos a disponibilidad.',
+    logo: ''
+  },
+  catalog: JSON.parse(JSON.stringify(DEFAULT_CATALOG)),
+  cart: [],
+  history: [],
+  shipping: 'recoge'
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('obracalc_pro_state_v2');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      state = Object.assign(state, parsed);
+      if (!state.catalog || !state.catalog.length) state.catalog = JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+    }
+  } catch (e) {}
+}
+function saveState() {
+  try { localStorage.setItem('obracalc_pro_state_v2', JSON.stringify(state)); } catch (e) {}
+}
+
+// --- NAVIGATION ---
+function switchView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (name === 'catalogo') renderCatalog();
+  if (name === 'cotizar') renderCart();
+  if (name === 'historial') renderHistory();
+  if (name === 'negocio') loadBizForm();
+}
+
+// --- ONBOARDING ---
+let tempProfile = 'ferreteria';
+function openOnboarding() {
+  tempProfile = state.profile || 'ferreteria';
+  selectProfileOption(tempProfile);
+  $('onbName').value = state.biz.nombre === 'ObraCalc Pro' ? '' : state.biz.nombre;
+  $('modalOnboarding').classList.add('open');
+}
+function selectProfileOption(p) {
+  tempProfile = p;
+  ['ferreteria', 'maestro', 'personal'].forEach(k => {
+    $('prof-' + k).classList.toggle('selected', k === p);
+  });
+}
+function confirmOnboarding() {
+  state.profile = tempProfile;
+  state.onboarded = true;
+  const n = $('onbName').value.trim();
+  if (n) state.biz.nombre = n;
+  saveState();
+  applyProfileUI();
+  closeModal('modalOnboarding');
+  toast('Perfil configurado');
+}
+function applyProfileUI() {
+  const labels = { ferreteria: 'Ferretería', maestro: 'Maestro', personal: 'Personal' };
+  $('headerProfileBadge').textContent = labels[state.profile] || 'Ferretería';
+  $('headerTitle').textContent = state.biz.nombre || 'ObraCalc Pro';
+  $('manoObraWrap').style.display = state.profile === 'maestro' ? 'block' : 'none';
+  if (state.biz.logo) {
+    $('headerLogo').innerHTML = `<img src="${state.biz.logo}" alt="logo"/>`;
+  } else {
+    $('headerLogo').textContent = (state.biz.nombre || 'OC').slice(0, 2).toUpperCase();
+  }
+}
+
+// --- CALCULATORS ---
+let calcTab = 'pintura';
+let calcVals = {
+  pAncho: '', pAlto: '', pManos: '2', pDesc: '0', pRend: '10',
+  fLargo: '', fAncho: '', fDesp: '10', fCaja: '1.5',
+  dLargo: '', dAlto: '', dCaras: '2',
+  cLargo: '', cAncho: '', cEsp: '0.10',
+  mLargo: '', mAlto: '', mLadM2: '12.5'
+};
+
+function setCalcTab(tab, el) {
+  calcTab = tab;
+  document.querySelectorAll('#calcTabs .pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCalcForm();
+  renderCalcResults();
+}
+
+function updCalc(key, val) {
+  calcVals[key] = val;
+  renderCalcResults();
+}
+
+function renderCalcForm() {
+  const titles = {
+    pintura: '1. Medidas de Pintura',
+    pisos: '1. Medidas de Pisos y Enchapes',
+    drywall: '1. Medidas de Drywall',
+    concreto: '1. Medidas de Concreto (1:2:3)',
+    muro: '1. Medidas de Muro / Ladrillos'
+  };
+  $('calcFormTitle').textContent = titles[calcTab];
+  let html = '';
+  if (calcTab === 'pintura') {
+    html = `
+      <div class="row">
+        <div class="col field"><label>Ancho (m)</label><input type="number" value="${calcVals.pAncho}" oninput="updCalc('pAncho',this.value)" placeholder="Ej: 4.5"></div>
+        <div class="col field"><label>Alto (m)</label><input type="number" value="${calcVals.pAlto}" oninput="updCalc('pAlto',this.value)" placeholder="Ej: 2.5"></div>
+      </div>
+      <div class="row">
+        <div class="col field"><label>Manos</label><input type="number" value="${calcVals.pManos}" oninput="updCalc('pManos',this.value)"></div>
+        <div class="col field"><label>Descontar (m²)</label><input type="number" value="${calcVals.pDesc}" oninput="updCalc('pDesc',this.value)"></div>
+      </div>
+      <div class="field"><label>Rendimiento (m² por litro)</label><input type="number" value="${calcVals.pRend}" oninput="updCalc('pRend',this.value)"></div>`;
+  } else if (calcTab === 'pisos') {
+    html = `
+      <div class="row">
+        <div class="col field"><label>Largo (m)</label><input type="number" value="${calcVals.fLargo}" oninput="updCalc('fLargo',this.value)" placeholder="Ej: 5"></div>
+        <div class="col field"><label>Ancho (m)</label><input type="number" value="${calcVals.fAncho}" oninput="updCalc('fAncho',this.value)" placeholder="Ej: 3.5"></div>
+      </div>
+      <div class="row">
+        <div class="col field"><label>Desperdicio (%)</label><input type="number" value="${calcVals.fDesp}" oninput="updCalc('fDesp',this.value)"></div>
+        <div class="col field"><label>m² por caja</label><input type="number" value="${calcVals.fCaja}" oninput="updCalc('fCaja',this.value)"></div>
+      </div>`;
+  } else if (calcTab === 'drywall') {
+    html = `
+      <div class="row">
+        <div class="col field"><label>Largo muro (m)</label><input type="number" value="${calcVals.dLargo}" oninput="updCalc('dLargo',this.value)" placeholder="Ej: 4"></div>
+        <div class="col field"><label>Alto muro (m)</label><input type="number" value="${calcVals.dAlto}" oninput="updCalc('dAlto',this.value)" placeholder="Ej: 2.4"></div>
+      </div>
+      <div class="field">
+        <label>Caras del muro</label>
+        <select onchange="updCalc('dCaras',this.value)">
+          <option value="1" ${calcVals.dCaras=='1'?'selected':''}>1 Cara (Forro)</option>
+          <option value="2" ${calcVals.dCaras=='2'?'selected':''}>2 Caras (División)</option>
+        </select>
+      </div>`;
+  } else if (calcTab === 'concreto') {
+    html = `
+      <div class="row">
+        <div class="col field"><label>Largo (m)</label><input type="number" value="${calcVals.cLargo}" oninput="updCalc('cLargo',this.value)" placeholder="Ej: 4"></div>
+        <div class="col field"><label>Ancho (m)</label><input type="number" value="${calcVals.cAncho}" oninput="updCalc('cAncho',this.value)" placeholder="Ej: 3"></div>
+      </div>
+      <div class="field"><label>Espesor / Profundidad (m)</label><input type="number" step="0.01" value="${calcVals.cEsp}" oninput="updCalc('cEsp',this.value)" placeholder="Ej: 0.10"></div>`;
+  } else {
+    html = `
+      <div class="row">
+        <div class="col field"><label>Largo muro (m)</label><input type="number" value="${calcVals.mLargo}" oninput="updCalc('mLargo',this.value)" placeholder="Ej: 6"></div>
+        <div class="col field"><label>Alto muro (m)</label><input type="number" value="${calcVals.mAlto}" oninput="updCalc('mAlto',this.value)" placeholder="Ej: 2.5"></div>
+      </div>
+      <div class="field"><label>Ladrillos o bloques por m²</label><input type="number" value="${calcVals.mLadM2}" oninput="updCalc('mLadM2',this.value)"></div>`;
+  }
+  $('calcFormBody').innerHTML = html;
+}
+
+function cargarEjemplo() {
+  if (calcTab === 'pintura') Object.assign(calcVals, { pAncho: '8', pAlto: '2.6', pManos: '2', pDesc: '2', pRend: '10' });
+  if (calcTab === 'pisos') Object.assign(calcVals, { fLargo: '5', fAncho: '4', fDesp: '10', fCaja: '1.5' });
+  if (calcTab === 'drywall') Object.assign(calcVals, { dLargo: '4.5', dAlto: '2.4', dCaras: '2' });
+  if (calcTab === 'concreto') Object.assign(calcVals, { cLargo: '5', cAncho: '4', cEsp: '0.10' });
+  if (calcTab === 'muro') Object.assign(calcVals, { mLargo: '6', mAlto: '2.5', mLadM2: '12.5' });
+  renderCalcForm();
+  renderCalcResults();
+}
+
+function findPrice(id, fallback) {
+  const f = state.catalog.find(x => x.id === id);
+  return f ? f.price : fallback;
+}
+
+function computeCurrentCalc() {
+  if (calcTab === 'pintura') {
+    const areaNeta = Math.max(0, num(calcVals.pAncho) * num(calcVals.pAlto) - num(calcVals.pDesc));
+    const areaTot = areaNeta * (num(calcVals.pManos) || 1);
+    const litros = areaTot / (num(calcVals.pRend) || 10);
+    const galones = Math.ceil(litros / 3.785);
+    return {
+      rows: [
+        ['Área neta', areaNeta.toFixed(2) + ' m²'],
+        ['Pintura necesaria', litros.toFixed(1) + ' Litros'],
+        ['Galones a comprar', galones + ' Galón(es)']
+      ],
+      items: galones > 0 ? [{ name: 'Pintura vinilo tipo 1', unit: 'Galón', qty: galones, price: findPrice('pintura', 68000) }] : []
+    };
+  }
+  if (calcTab === 'pisos') {
+    const area = num(calcVals.fLargo) * num(calcVals.fAncho);
+    const areaDesp = area * (1 + num(calcVals.fDesp) / 100);
+    const cajas = Math.ceil(areaDesp / (num(calcVals.fCaja) || 1.5));
+    const pegante = Math.ceil(areaDesp / 4.5);
+    return {
+      rows: [
+        ['Área + desperdicio', areaDesp.toFixed(2) + ' m²'],
+        ['Cajas de cerámica', cajas + ' Caja(s)'],
+        ['Pegante 25kg', pegante + ' Bulto(s)']
+      ],
+      items: area > 0 ? [
+        { name: 'Cerámica piso estándar', unit: 'Caja', qty: cajas, price: findPrice('ceramica', 48000) },
+        { name: 'Pegante cerámico 25kg', unit: 'Bulto', qty: pegante, price: findPrice('pegante', 28000) }
+      ] : []
+    };
+  }
+  if (calcTab === 'drywall') {
+    const area = num(calcVals.dLargo) * num(calcVals.dAlto);
+    const caras = num(calcVals.dCaras) || 2;
+    const laminas = Math.ceil((area * caras / 2.9768) * 1.05);
+    const parales = Math.ceil(area * 1.7);
+    const canales = Math.ceil(area * 0.7);
+    return {
+      rows: [
+        ['Área del muro', area.toFixed(2) + ' m²'],
+        ['Láminas Drywall', laminas + ' Unidad(es)'],
+        ['Parales metálicos', parales + ' Unidad(es)'],
+        ['Canales metálicos', canales + ' Unidad(es)']
+      ],
+      items: area > 0 ? [
+        { name: 'Lámina Drywall 1.22x2.44m', unit: 'Unidad', qty: laminas, price: findPrice('lamina_dw', 36000) },
+        { name: 'Paral metálico Drywall', unit: 'Unidad', qty: parales, price: findPrice('paral_dw', 13500) },
+        { name: 'Canal metálico Drywall', unit: 'Unidad', qty: canales, price: findPrice('canal_dw', 11500) }
+      ] : []
+    };
+  }
+  if (calcTab === 'concreto') {
+    const vol = num(calcVals.cLargo) * num(calcVals.cAncho) * num(calcVals.cEsp);
+    const bultos = Math.ceil(vol * 7 * 1.05);
+    const arena = +(vol * 0.56).toFixed(2);
+    const gravilla = +(vol * 0.84).toFixed(2);
+    return {
+      rows: [
+        ['Volumen total', vol.toFixed(2) + ' m³'],
+        ['Cemento gris 50kg', bultos + ' Bulto(s)'],
+        ['Arena lavada', arena + ' m³'],
+        ['Gravilla / Triturado', gravilla + ' m³']
+      ],
+      items: vol > 0 ? [
+        { name: 'Cemento gris 50kg', unit: 'Bulto', qty: bultos, price: findPrice('cemento', 32000) },
+        { name: 'Arena lavada', unit: 'm³', qty: Math.max(0.5, arena), price: findPrice('arena', 110000) },
+        { name: 'Gravilla / Triturado', unit: 'm³', qty: Math.max(0.5, gravilla), price: findPrice('gravilla', 120000) }
+      ] : []
+    };
+  }
+  // Muro
+  const area = num(calcVals.mLargo) * num(calcVals.mAlto);
+  const ladrillos = Math.ceil(area * (num(calcVals.mLadM2) || 12.5) * 1.05);
+  const cemento = Math.ceil(area * 0.16);
+  return {
+    rows: [
+      ['Área del muro', area.toFixed(2) + ' m²'],
+      ['Ladrillos / Bloques (+5%)', ladrillos + ' Unidad(es)'],
+      ['Cemento para pega (50kg)', cemento + ' Bulto(s)']
+    ],
+    items: area > 0 ? [
+      { name: 'Ladrillo estructural / bloque', unit: 'Unidad', qty: ladrillos, price: findPrice('ladrillo', 1400) },
+      { name: 'Cemento gris 50kg', unit: 'Bulto', qty: cemento, price: findPrice('cemento', 32000) }
+    ] : []
+  };
+}
+
+function renderCalcResults() {
+  const res = computeCurrentCalc();
+  $('calcResults').innerHTML = res.rows.map(r =>
+    `<div class="res-row"><span>${r[0]}</span><span class="res-val">${r[1]}</span></div>`
+  ).join('');
+}
+
+function agregarCalculoAlCarrito() {
+  const res = computeCurrentCalc();
+  if (!res.items.length) { toast('Ingresa primero las medidas'); return; }
+  res.items.forEach(it => addToCart(it));
+  toast('Materiales agregados a Cotizar');
+}
+
+// --- CATALOG & LIBRARY ---
+let catFilter = 'Todos';
+function setCatFilter(cat, el) {
+  catFilter = cat;
+  document.querySelectorAll('#catFilters .pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const q = ($('catSearch').value || '').toLowerCase();
+  const list = state.catalog.filter(it =>
+    (catFilter === 'Todos' || it.cat === catFilter) &&
+    it.name.toLowerCase().includes(q)
+  );
+  if (!list.length) {
+    $('catalogList').innerHTML = '<p style="color:var(--muted);font-size:13px;">No hay productos con ese filtro.</p>';
+    return;
+  }
+  $('catalogList').innerHTML = list.map((it) => {
+    const idx = state.catalog.indexOf(it);
+    return `
+      <div class="item-row">
+        <div style="flex:1;min-width:0;">
+          <div class="item-name">${it.name}</div>
+          <div class="item-sub">${it.cat} · ${it.unit}</div>
+        </div>
+        <input class="price-inline" type="number" value="${it.price}" onchange="updateCatPrice(${idx}, this.value)" />
+        <button class="btn btn-primary btn-sm" onclick="addCatalogToCart(${idx})">+ Cotizar</button>
+      </div>`;
+  }).join('');
+}
+
+function updateCatPrice(idx, val) {
+  state.catalog[idx].price = num(val);
+  saveState();
+  toast('Precio actualizado');
+}
+
+function addCatalogToCart(idx) {
+  const it = state.catalog[idx];
+  addToCart({ name: it.name, unit: it.unit, qty: 1, price: it.price });
+  toast('+1 ' + it.name);
+}
+
+function crearProducto() {
+  const name = $('newProdName').value.trim();
+  const price = num($('newProdPrice').value);
+  if (!name) { toast('Escribe el nombre del producto'); return; }
+  state.catalog.unshift({
+    id: 'custom_' + Date.now(),
+    name,
+    cat: $('newProdCat').value,
+    unit: $('newProdUnit').value,
+    price
+  });
+  saveState();
+  $('newProdName').value = '';
+  $('newProdPrice').value = '';
+  renderCatalog();
+  toast('Producto guardado');
+}
+
+// Library Modal
+let libCat = 'Todos';
+function openLibraryModal() {
+  const cats = ['Todos', 'Obra negra', 'Acabados', 'Ferretería', 'Plomería/Eléctricos'];
+  $('libCats').innerHTML = cats.map(c =>
+    `<button class="pill ${c===libCat?'active':''}" onclick="setLibCat('${c}')">${c}</button>`
+  ).join('');
+  renderLibrary();
+  $('modalLibrary').classList.add('open');
+}
+function setLibCat(c) { libCat = c; openLibraryModal(); }
+function renderLibrary() {
+  const q = ($('libSearch').value || '').toLowerCase();
+  const items = LIBRARY_ITEMS.filter(it =>
+    (libCat === 'Todos' || it.cat === libCat) && it.name.toLowerCase().includes(q)
+  );
+  $('libList').innerHTML = items.map((it, i) => {
+    const exists = state.catalog.some(c => c.name.toLowerCase() === it.name.toLowerCase());
+    return `
+      <div class="item-row">
+        <div style="flex:1;min-width:0;">
+          <div class="item-name">${it.name}</div>
+          <div class="item-sub">${it.cat} · ${it.unit}</div>
+        </div>
+        <input class="price-inline" id="libP_${i}" type="number" value="${it.price}" />
+        <button class="btn ${exists?'btn-secondary':'btn-primary'} btn-sm" onclick="addFromLibrary('${it.name.replace(/'/g,"\\'")}', '${it.cat}', '${it.unit}', 'libP_${i}')">
+          ${exists ? '✓ Listo' : '+ Agregar'}
+        </button>
+      </div>`;
+  }).join('');
+}
+function addFromLibrary(name, cat, unit, priceId) {
+  if (state.catalog.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    toast('Ya está en tu catálogo'); return;
+  }
+  const price = num($(priceId).value);
+  state.catalog.unshift({ id: 'lib_' + Date.now(), name, cat, unit, price });
+  saveState();
+  renderCatalog();
+  renderLibrary();
+  toast('Agregado a tu catálogo');
+}
+
+// --- CART & QUOTATION ---
+function addToCart(item) {
+  const existing = state.cart.find(c => c.name === item.name && c.unit === item.unit);
+  if (existing) {
+    existing.qty = +(existing.qty + item.qty).toFixed(2);
+    existing.price = item.price;
+  } else {
+    state.cart.push({ ...item });
+  }
+  saveState();
+  updateCartBadge();
+}
+function updateCartBadge() {
+  const b = $('cartBadge');
+  b.textContent = state.cart.length;
+  b.style.display = state.cart.length ? 'flex' : 'none';
+}
+
+function renderCart() {
+  if (!state.cart.length) {
+    $('cartList').innerHTML = '<p style="color:var(--muted);font-size:13px;">Tu cotización está vacía. Agrega materiales desde <strong>Calcular</strong> o <strong>Catálogo</strong>.</p>';
+  } else {
+    $('cartList').innerHTML = state.cart.map((it, i) => `
+      <div class="item-row">
+        <div style="flex:1;min-width:0;">
+          <div class="item-name">${it.name}</div>
+          <div class="item-sub">${money(it.price)} / ${it.unit} · <strong>${money(it.qty * it.price)}</strong></div>
+        </div>
+        <div class="qty-box">
+          <button class="qty-btn" onclick="chgQty(${i}, -1)">-</button>
+          <span style="min-width:24px;text-align:center;font-weight:800;">${it.qty}</span>
+          <button class="qty-btn" onclick="chgQty(${i}, 1)">+</button>
+        </div>
+      </div>`).join('');
+  }
+  renderCartTotals();
+}
+function chgQty(i, delta) {
+  state.cart[i].qty = +(state.cart[i].qty + delta).toFixed(2);
+  if (state.cart[i].qty <= 0) state.cart.splice(i, 1);
+  saveState();
+  updateCartBadge();
+  renderCart();
+}
+
+function openCustomItemModal() {
+  $('ciName').value = ''; $('ciQty').value = '1'; $('ciUnit').value = 'Unidad'; $('ciPrice').value = '';
+  $('modalCustomItem').classList.add('open');
+}
+function agregarItemLibre() {
+  const name = $('ciName').value.trim();
+  if (!name) { toast('Escribe una descripción'); return; }
+  addToCart({ name, qty: num($('ciQty').value) || 1, unit: $('ciUnit').value || 'Unidad', price: num($('ciPrice').value) });
+  closeModal('modalCustomItem');
+  renderCart();
+  toast('Ítem agregado');
+}
+
+function setShipping(mode) {
+  state.shipping = mode;
+  ['recoge', 'costo', 'gratis'].forEach(m => $('ship-' + m).classList.toggle('active', m === mode));
+  $('shippingDetails').style.display = mode === 'recoge' ? 'none' : 'block';
+  $('shippingCostWrap').style.display = mode === 'costo' ? 'block' : 'none';
+  if (mode !== 'costo') $('qFlete').value = '0';
+  renderCartTotals();
+}
+function setFleteRapido(val) { $('qFlete').value = val; renderCartTotals(); }
+
+function getTotals() {
+  const subMat = state.cart.reduce((s, it) => s + it.qty * it.price, 0);
+  const manoObra = state.profile === 'maestro' ? num($('qManoObra').value) : 0;
+  const flete = state.shipping === 'costo' ? num($('qFlete').value) : 0;
+  const descPct = num($('qDescPct').value);
+  const descuento = (subMat + manoObra) * (descPct / 100);
+  const baseIva = Math.max(0, subMat + manoObra - descuento);
+  const ivaPct = num($('qIvaPct').value);
+  const iva = baseIva * (ivaPct / 100);
+  const total = baseIva + iva + flete;
+  const abono = Math.min(total, num($('qAbono').value));
+  const saldo = Math.max(0, total - abono);
+  return { subMat, manoObra, flete, descPct, descuento, ivaPct, iva, total, abono, saldo };
+}
+
+function setAbonoRapido(factor) {
+  const t = getTotals();
+  $('qAbono').value = Math.round(t.total * factor);
+  renderCartTotals();
+}
+
+function renderCartTotals() {
+  const t = getTotals();
+  $('cartTotalsBox').innerHTML = `
+    <div class="tot-line"><span>Subtotal materiales</span><span>${money(t.subMat)}</span></div>
+    ${t.manoObra > 0 ? `<div class="tot-line"><span>Mano de obra</span><span>${money(t.manoObra)}</span></div>` : ''}
+    ${t.descuento > 0 ? `<div class="tot-line"><span>Descuento (${t.descPct}%)</span><span>-${money(t.descuento)}</span></div>` : ''}
+    ${t.iva > 0 ? `<div class="tot-line"><span>IVA (${t.ivaPct}%)</span><span>${money(t.iva)}</span></div>` : ''}
+    <div class="tot-line"><span>Transporte</span><span>${state.shipping==='gratis'?'$0 (Cortesía)':money(t.flete)}</span></div>
+    <div class="tot-main"><span>TOTAL</span><span>${money(t.total)}</span></div>
+    ${t.abono > 0 ? `
+      <div class="tot-line" style="margin-top:8px;color:#93C5FD;"><span>Abono recibido</span><span>${money(t.abono)}</span></div>
+      <div class="tot-line" style="font-weight:800;color:#FCD34D;"><span>SALDO PENDIENTE</span><span>${money(t.saldo)}</span></div>
+    ` : ''}
+  `;
+}
+
+// --- PDF & WHATSAPP ---
+function buildQuoteHTML() {
+  const t = getTotals();
+  const fecha = new Date().toLocaleDateString('es-CO');
+  const cliente = $('qCliente').value.trim() || 'Cliente mostrador';
+  const dir = $('qDireccion').value.trim();
+  const entregaTxt = state.shipping === 'recoge' ? 'Recoge en tienda' :
+    (state.shipping === 'gratis' ? 'Envío gratis' : 'Envío con flete') + (dir ? ' · ' + dir : '');
+
+  const rows = state.cart.map(it => `
+    <tr>
+      <td>${it.name}</td>
+      <td class="text-right">${it.qty} ${it.unit}</td>
+      <td class="text-right">${money(it.price)}</td>
+      <td class="text-right"><strong>${money(it.qty * it.price)}</strong></td>
+    </tr>`).join('');
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #F59E0B;padding-bottom:10px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        ${state.biz.logo ? `<img src="${state.biz.logo}" style="width:48px;height:48px;object-fit:contain;border-radius:6px;"/>` : ''}
+        <div>
+          <h2 style="margin:0;font-size:18px;">${state.biz.nombre || 'ObraCalc Pro'}</h2>
+          <div style="font-size:11px;color:#4B5563;">
+            ${state.biz.nit ? 'NIT/ID: ' + state.biz.nit + ' · ' : ''}${state.biz.tel || ''}<br/>
+            ${state.biz.dir || ''}
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#4B5563;">
+        <strong>COTIZACIÓN</strong><br/>Fecha: ${fecha}
+      </div>
+    </div>
+    <div style="font-size:12px;margin-bottom:10px;">
+      <strong>Cliente:</strong> ${cliente} ${$('qTel').value ? '· Tel: ' + $('qTel').value : ''}<br/>
+      <strong>Entrega:</strong> ${entregaTxt}
+    </div>
+    <table class="pdf-table">
+      <thead><tr><th>Producto</th><th class="text-right">Cant.</th><th class="text-right">V. Unit</th><th class="text-right">Subtotal</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:10px;font-size:12px;">
+      <div style="display:flex;justify-content:space-between;"><span>Materiales:</span><strong>${money(t.subMat)}</strong></div>
+      ${t.manoObra > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Mano de obra:</span><strong>${money(t.manoObra)}</strong></div>` : ''}
+      ${t.descuento > 0 ? `<div style="display:flex;justify-content:space-between;"><span>Descuento (${t.descPct}%):</span><strong>-${money(t.descuento)}</strong></div>` : ''}
+      ${t.iva > 0 ? `<div style="display:flex;justify-content:space-between;"><span>IVA (${t.ivaPct}%):</span><strong>${money(t.iva)}</strong></div>` : ''}
+      <div style="display:flex;justify-content:space-between;"><span>Transporte:</span><strong>${state.shipping==='gratis'?'$0 (Cortesía)':money(t.flete)}</strong></div>
+      <hr style="border:0;border-top:1px solid #D1D5DB;margin:8px 0;"/>
+      <div style="display:flex;justify-content:space-between;font-size:16px;"><strong>TOTAL:</strong><strong>${money(t.total)}</strong></div>
+      ${t.abono > 0 ? `
+        <div style="display:flex;justify-content:space-between;color:#1D4ED8;margin-top:4px;"><span>Abono recibido:</span><strong>${money(t.abono)}</strong></div>
+        <div style="display:flex;justify-content:space-between;color:#B45309;"><span>SALDO PENDIENTE:</span><strong>${money(t.saldo)}</strong></div>
+      ` : ''}
+    </div>
+    ${state.biz.pagos ? `<div style="margin-top:10px;font-size:11px;background:#FFFBEB;border:1px solid #FDE68A;padding:8px;border-radius:6px;"><strong>Medios de pago:</strong> ${state.biz.pagos}</div>` : ''}
+    <p style="font-size:10px;color:#6B7280;text-align:center;margin-top:14px;">${state.biz.nota || ''}</p>
+  `;
+}
+
+function abrirVistaPDF() {
+  if (!state.cart.length) { toast('Agrega al menos un producto'); return; }
+  const html = buildQuoteHTML();
+  $('pdfPreviewContent').innerHTML = html;
+  $('printSheet').innerHTML = html;
+  $('modalPDF').classList.add('open');
+}
+
+function buildTextMessage() {
+  const t = getTotals();
+  const cliente = $('qCliente').value.trim() || 'Cliente';
+  let txt = `*COTIZACIÓN - ${state.biz.nombre || 'ObraCalc Pro'}*\n`;
+  txt += `Cliente: ${cliente}\n\n`;
+  state.cart.forEach(it => {
+    txt += `• ${it.qty} ${it.unit} ${it.name}: ${money(it.qty * it.price)}\n`;
+  });
+  txt += `\nSubtotal materiales: ${money(t.subMat)}`;
+  if (t.manoObra > 0) txt += `\nMano de obra: ${money(t.manoObra)}`;
+  if (t.descuento > 0) txt += `\nDescuento (${t.descPct}%): -${money(t.descuento)}`;
+  if (t.iva > 0) txt += `\nIVA (${t.ivaPct}%): ${money(t.iva)}`;
+  if (state.shipping === 'gratis') txt += `\nTransporte: $0 (Cortesía)`;
+  else if (t.flete > 0) txt += `\nTransporte: ${money(t.flete)}`;
+  txt += `\n*TOTAL: ${money(t.total)}*`;
+  if (t.abono > 0) txt += `\nAbono: ${money(t.abono)}\n*Saldo pendiente: ${money(t.saldo)}*`;
+  if (state.biz.pagos) txt += `\n\nMedios de pago:\n${state.biz.pagos}`;
+  return txt;
+}
+
+function enviarWhatsApp() {
+  if (!state.cart.length) { toast('Agrega al menos un producto'); return; }
+  const url = 'https://wa.me/?text=' + encodeURIComponent(buildTextMessage());
+  window.open(url, '_blank');
+}
+
+function copiarTexto() {
+  if (!state.cart.length) { toast('Agrega al menos un producto'); return; }
+  navigator.clipboard.writeText(buildTextMessage()).then(() => toast('Texto copiado'));
+}
+
+// --- HISTORY & ABONOS ---
+function guardarEnHistorial() {
+  if (!state.cart.length) { toast('La cotización está vacía'); return; }
+  const t = getTotals();
+  state.history.unshift({
+    id: Date.now(),
+    fecha: new Date().toLocaleDateString('es-CO'),
+    cliente: $('qCliente').value.trim() || 'Cliente mostrador',
+    items: JSON.parse(JSON.stringify(state.cart)),
+    total: t.total,
+    abono: t.abono,
+    estado: t.saldo === 0 && t.total > 0 ? 'Vendida' : 'Pendiente'
+  });
+  saveState();
+  toast('Guardado en historial');
+}
+
+function renderHistory() {
+  if (!state.history.length) {
+    $('historyList').innerHTML = '<p style="color:var(--muted);font-size:13px;">Aún no tienes cotizaciones guardadas.</p>';
+    return;
+  }
+  $('historyList').innerHTML = state.history.map((h, i) => {
+    const saldo = Math.max(0, h.total - (h.abono || 0));
+    return `
+      <div class="card" style="background:var(--bg);margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:6px;">
+          <span>${h.cliente}</span>
+          <button class="status-badge st-${h.estado}" onclick="cycleStatus(${i})">${h.estado}</button>
+        </div>
+        <div class="item-sub">${h.fecha} · ${h.items.length} ítem(s)</div>
+        <div style="margin:8px 0;font-size:14px;">
+          Total: <strong style="color:var(--success);">${money(h.total)}</strong>
+          ${h.abono > 0 ? ` · Abonó: ${money(h.abono)} · <strong style="color:#FCD34D;">Saldo: ${money(saldo)}</strong>` : ''}
+        </div>
+        <div class="row">
+          <button class="btn btn-secondary btn-sm" onclick="openAbonoModal(${i})">Abonar / Saldo</button>
+          <button class="btn btn-secondary btn-sm" onclick="duplicarCotizacion(${i})">Duplicar</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarHistorial(${i})">Borrar</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function cycleStatus(i) {
+  const order = ['Pendiente', 'Aprobada', 'Vendida'];
+  const cur = order.indexOf(state.history[i].estado);
+  state.history[i].estado = order[(cur + 1) % order.length];
+  saveState();
+  renderHistory();
+}
+
+let activeAbonoIdx = -1;
+function openAbonoModal(i) {
+  activeAbonoIdx = i;
+  const h = state.history[i];
+  const saldo = Math.max(0, h.total - (h.abono || 0));
+  $('abonoInfo').innerHTML = `<strong>${h.cliente}</strong><br/>Total: ${money(h.total)} · Abonado: ${money(h.abono || 0)}<br/>Saldo pendiente: <strong style="color:var(--primary);">${money(saldo)}</strong>`;
+  $('abonoAdd').value = '';
+  $('modalAbono').classList.add('open');
+}
+function aplicarAbonoHistorial(saldarTodo) {
+  const h = state.history[activeAbonoIdx];
+  if (!h) return;
+  if (saldarTodo) {
+    h.abono = h.total;
+    h.estado = 'Vendida';
+  } else {
+    h.abono = Math.min(h.total, (h.abono || 0) + num($('abonoAdd').value));
+    if (h.abono >= h.total) h.estado = 'Vendida';
+  }
+  saveState();
+  closeModal('modalAbono');
+  renderHistory();
+  toast('Abono actualizado');
+}
+
+function duplicarCotizacion(i) {
+  const h = state.history[i];
+  state.cart = JSON.parse(JSON.stringify(h.items));
+  $('qCliente').value = h.cliente;
+  saveState();
+  updateCartBadge();
+  switchView('cotizar', document.querySelectorAll('.nav-btn')[2]);
+  toast('Cotización cargada en el carrito');
+}
+function eliminarHistorial(i) {
+  state.history.splice(i, 1);
+  saveState();
+  renderHistory();
+}
+
+// --- BUSINESS SETTINGS & BACKUP ---
+function loadBizForm() {
+  $('bizNombre').value = state.biz.nombre || '';
+  $('bizNit').value = state.biz.nit || '';
+  $('bizTel').value = state.biz.tel || '';
+  $('bizDir').value = state.biz.dir || '';
+  $('bizPagos').value = state.biz.pagos || '';
+  $('bizNota').value = state.biz.nota || '';
+  $('bizLogoPreview').innerHTML = state.biz.logo
+    ? `<img src="${state.biz.logo}" style="height:48px;border-radius:8px;border:1px solid var(--border);"/>`
+    : '';
+}
+function guardarNegocio() {
+  state.biz.nombre = $('bizNombre').value.trim() || 'ObraCalc Pro';
+  state.biz.nit = $('bizNit').value.trim();
+  state.biz.tel = $('bizTel').value.trim();
+  state.biz.dir = $('bizDir').value.trim();
+  state.biz.pagos = $('bizPagos').value.trim();
+  state.biz.nota = $('bizNota').value.trim();
+  saveState();
+  applyProfileUI();
+  toast('Datos del negocio guardados');
+}
+function subirLogo(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 200;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      state.biz.logo = canvas.toDataURL('image/png', 0.85);
+      saveState();
+      applyProfileUI();
+      loadBizForm();
+      toast('Logo actualizado');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function exportarBackup() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'obracalc-respaldo.json';
+  a.click();
+  toast('Respaldo descargado');
+}
+function importarBackup(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.catalog) throw new Error('inválido');
+      state = Object.assign(state, data);
+      saveState();
+      applyProfileUI();
+      updateCartBadge();
+      loadBizForm();
+      toast('Respaldo restaurado');
+    } catch {
+      toast('Archivo de respaldo no válido');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// --- INIT ---
+loadState();
+applyProfileUI();
+renderCalcForm();
+renderCalcResults();
+updateCartBadge();
+if (!state.onboarded) openOnboarding();
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "ObraCalc Pro - Calculadora y Cotizador",
+  "short_name": "ObraCalc Pro",
+  "description": "Calculadora de materiales de construcción, catálogo de ferretería y cotizador profesional en PDF y WhatsApp 100% sin internet.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#F59E0B",
+  "lang": "es",
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
